@@ -1,0 +1,127 @@
+<div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+  <h2 class="text-3xl font-bold text-center text-gray-900 dark:text-white mb-6">LPG Gas Booking</h2>
+
+  @switch (viewState()) {
+    @case ('FORM') {
+      <form [formGroup]="bookingForm" (ngSubmit)="fetchDetails()" class="space-y-6">
+        <div>
+          <label for="provider" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Gas Provider</label>
+          <select id="provider" formControlName="provider"
+            class="mt-1 block w-full pl-3 pr-10 py-2 text-base bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+            <option value="" disabled>Select your provider</option>
+            @for (provider of providers; track provider.name) {
+              <option [value]="provider.name">{{ provider.name }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Registered Mobile Number</label>
+          <input type="text" id="phone" formControlName="phone" maxlength="10"
+            class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+        @if (errorMessage()) {
+          <div class="bg-red-100 dark:bg-red-900/50 border-l-4 border-red-500 text-red-700 dark:text-red-300 p-4" role="alert">
+            <p>{{ errorMessage() }}</p>
+          </div>
+        }
+        <button type="submit" [disabled]="bookingForm.invalid"
+          class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-primary-hover dark:bg-brand-dark-primary dark:text-gray-900 dark:hover:bg-brand-dark-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+          Fetch Details
+        </button>
+      </form>
+    }
+    @case ('LOADING') {
+      <div class="text-center py-10">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-500 mx-auto"></div>
+        <p class="mt-4 text-gray-600 dark:text-gray-300">Fetching booking details...</p>
+      </div>
+    }
+    @case ('DETAILS') {
+      @if(gasDetails(); as details) {
+        <div class="space-y-4">
+          <div class="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Booking Summary</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">Provider:</span> <span class="font-medium">{{bookingForm.value.provider}}</span></div>
+              <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">Consumer Name:</span> <span class="font-medium">{{details.consumerName}}</span></div>
+              <div class="flex justify-between text-lg mt-4 pt-4 border-t border-gray-200 dark:border-gray-600"><span class="font-bold">Amount:</span> <span class="font-bold text-indigo-600 dark:text-indigo-400">₹{{details.amount.toFixed(2)}}</span></div>
+            </div>
+          </div>
+          <button (click)="proceedToPayment()" class="w-full bg-brand-primary hover:bg-brand-primary-hover text-white dark:bg-brand-dark-primary dark:text-gray-900 dark:hover:bg-brand-dark-primary-hover font-bold py-3 px-4 rounded-lg">
+            Book Now
+          </button>
+          <button (click)="reset()" class="w-full text-center text-sm text-indigo-600 dark:text-indigo-400 hover:underline mt-4">Start Over</button>
+        </div>
+      }
+    }
+     @case('PAYMENT') {
+        <div class="space-y-6">
+            <h3 class="text-xl font-semibold text-center">Choose Payment Method</h3>
+             <div>
+                <div class="flex border border-gray-300 dark:border-gray-600 rounded-md">
+                    <button (click)="paymentMethod.set('UPI')" [class]="paymentMethod() === 'UPI' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'" class="flex-1 p-3 rounded-l-md transition-colors">UPI</button>
+                    <button (click)="paymentMethod.set('CARD')" [class]="paymentMethod() === 'CARD' ? 'bg-indigo-600 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'" class="flex-1 p-3 rounded-r-md transition-colors border-l dark:border-gray-600">Card</button>
+                </div>
+            </div>
+
+            <form [formGroup]="paymentForm" (ngSubmit)="bookGas()" class="space-y-4">
+                @if(paymentMethod() === 'UPI') {
+                    <div>
+                      <label for="upiId" class="block text-sm font-medium text-gray-700 dark:text-gray-300">UPI ID</label>
+                      <input type="text" id="upiId" formControlName="upiId" placeholder="yourname@bank"
+                        class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                } @else {
+                    <div class="space-y-4">
+                        <!-- Card fields here, similar to utility bill -->
+                    </div>
+                }
+                 <button type="submit"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-primary-hover dark:bg-brand-dark-primary dark:text-gray-900 dark:hover:bg-brand-dark-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Pay ₹{{gasDetails()?.amount.toFixed(2)}}
+                </button>
+            </form>
+        </div>
+        
+        @if (showConfirmationDialog()) {
+          <div class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out">
+              <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm m-4 transform transition-all duration-300 ease-in-out scale-100">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Confirm Booking</h3>
+                  <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                      You are about to book a gas cylinder for <span class="font-bold text-indigo-600 dark:text-indigo-400">₹{{gasDetails()?.amount.toFixed(2)}}</span>.
+                  </p>
+                  <div class="mt-6 flex justify-end space-x-4">
+                      <button (click)="cancelBooking()" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600">
+                          Cancel
+                      </button>
+                      <button (click)="executeBooking()" type="button" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                          Confirm
+                      </button>
+                  </div>
+              </div>
+          </div>
+        }
+    }
+    @case ('PAYMENT_PROCESSING') {
+        <div class="text-center py-10">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-500 mx-auto"></div>
+            <p class="mt-4 text-gray-600 dark:text-gray-300">Processing your booking...</p>
+        </div>
+    }
+    @case ('SUCCESS') {
+      <div class="text-center py-10">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h3 class="text-2xl font-bold mt-4">Booking Successful!</h3>
+        <p class="text-gray-600 dark:text-gray-400 mt-2">Your transaction ID is <span class="font-mono text-indigo-600 dark:text-indigo-400">{{transactionId()}}</span>.</p>
+        <div class="mt-8 space-y-4">
+          <button (click)="downloadReceipt()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg">
+            Download Receipt
+          </button>
+          <button (click)="reset()" class="w-full text-center text-sm text-indigo-600 dark:text-indigo-400 hover:underline">New Booking</button>
+        </div>
+      </div>
+    }
+  }
+</div>

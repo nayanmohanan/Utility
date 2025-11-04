@@ -1,0 +1,5 @@
+{
+  "name": "WardConnect",
+  "description": "A minimalistic, responsive utility payments web app. Pay your electricity, water, and gas bills in just a few clicks. WardConnect makes bill payments simple and convenient for everyone.",
+  "requestFramePermissions": []
+}

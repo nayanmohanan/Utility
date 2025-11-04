@@ -1,0 +1,139 @@
+<div class="max-w-4xl mx-auto bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+  <h2 class="text-3xl font-bold text-center text-gray-900 dark:text-white mb-6">My Bill History</h2>
+
+  @switch (viewState()) {
+    @case ('FORM') {
+      <p class="text-center text-gray-600 dark:text-gray-300 mb-6">Enter your details to view your transaction history.</p>
+      <form [formGroup]="searchForm" (ngSubmit)="fetchTransactions()" class="space-y-6 max-w-sm mx-auto">
+        <div>
+          <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Registered Mobile Number</label>
+          <input type="text" id="phone" formControlName="phone" maxlength="10"
+            class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+        <div>
+          <label for="consumerId" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Consumer ID</label>
+          <input type="text" id="consumerId" formControlName="consumerId" maxlength="13"
+            class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+        <button type="submit" [disabled]="searchForm.invalid"
+          class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-primary-hover dark:bg-brand-dark-primary dark:text-gray-900 dark:hover:bg-brand-dark-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+          View History
+        </button>
+      </form>
+    }
+    @case ('LOADING') {
+      <div class="text-center py-10">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-500 mx-auto"></div>
+        <p class="mt-4 text-gray-600 dark:text-gray-300">Fetching your transaction history...</p>
+      </div>
+    }
+    @case ('RESULTS') {
+      <div>
+        <div class="mb-4">
+          <label for="filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Filter Transactions</label>
+          <input type="text" id="filter" [value]="filterText()" (input)="onFilterChange($event)" placeholder="Search by ID, service, status, amount..."
+            class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+
+        <div class="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  <button (click)="onSort('transactionId')" class="flex items-center space-x-1 transition-colors hover:text-gray-900 dark:hover:text-white">
+                    <span>Transaction ID</span>
+                    @if (sortColumn() === 'transactionId') {
+                      <span>
+                        @if(sortDirection() === 'asc') { <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg> }
+                        @else { <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> }
+                      </span>
+                    }
+                  </button>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                   <button (click)="onSort('date')" class="flex items-center space-x-1 transition-colors hover:text-gray-900 dark:hover:text-white">
+                    <span>Date</span>
+                    @if (sortColumn() === 'date') {
+                      <span>
+                        @if(sortDirection() === 'asc') { <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg> }
+                        @else { <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> }
+                      </span>
+                    }
+                  </button>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                   <button (click)="onSort('service')" class="flex items-center space-x-1 transition-colors hover:text-gray-900 dark:hover:text-white">
+                    <span>Service</span>
+                    @if (sortColumn() === 'service') {
+                      <span>
+                        @if(sortDirection() === 'asc') { <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg> }
+                        @else { <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> }
+                      </span>
+                    }
+                  </button>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                   <button (click)="onSort('amount')" class="flex items-center space-x-1 transition-colors hover:text-gray-900 dark:hover:text-white">
+                    <span>Amount</span>
+                    @if (sortColumn() === 'amount') {
+                      <span>
+                        @if(sortDirection() === 'asc') { <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg> }
+                        @else { <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> }
+                      </span>
+                    }
+                  </button>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                   <button (click)="onSort('status')" class="flex items-center space-x-1 transition-colors hover:text-gray-900 dark:hover:text-white">
+                    <span>Status</span>
+                    @if (sortColumn() === 'status') {
+                      <span>
+                        @if(sortDirection() === 'asc') { <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg> }
+                        @else { <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg> }
+                      </span>
+                    }
+                  </button>
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Receipt</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              @for (txn of displayedTransactions(); track txn.transactionId) {
+                <tr>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700 dark:text-gray-300">{{ txn.transactionId }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ txn.date }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">{{ txn.service }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">₹{{ txn.amount.toFixed(2) }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm">
+                    <span [class]="txn.status === 'SUCCESS' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                      {{ txn.status }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button (click)="downloadReceipt(txn)" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-200 focus:outline-none font-medium">Download</button>
+                  </td>
+                </tr>
+              }
+              @if(displayedTransactions().length === 0) {
+                 <tr>
+                    <td colspan="6" class="text-center p-6 text-gray-500 dark:text-gray-400">
+                        No transactions match your filter.
+                    </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <button (click)="searchAgain()" class="w-full text-center text-sm text-indigo-600 dark:text-indigo-400 hover:underline mt-6">Search Again</button>
+      </div>
+    }
+    @case ('NO_RESULTS') {
+      <div class="text-center py-10">
+        <p class="text-gray-600 dark:text-gray-300">No transactions found for the provided details.</p>
+        <button (click)="searchAgain()" class="mt-4 bg-brand-primary hover:bg-brand-primary-hover text-white dark:bg-brand-dark-primary dark:text-gray-900 dark:hover:bg-brand-dark-primary-hover font-bold py-2 px-4 rounded-lg">
+          Try Again
+        </button>
+      </div>
+    }
+  }
+</div>
