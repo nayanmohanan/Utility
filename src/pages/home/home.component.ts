@@ -21,7 +21,7 @@ export class HomeComponent implements OnInit {
   services = [
     {
       title: 'Electricity',
-      icon: '<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>',
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-500" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>',
       description: 'Pay your electricity bills instantly.',
       details: 'Support for all major providers with real-time processing.',
       features: 'Instant Payment | 24/7 Service | E-Receipt.',

@@ -5,11 +5,14 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DataService } from '../../services/data.service';
 import { Bill } from '../../services/data.service';
 import { CaptchaService } from '../../services/captcha.service';
+import { of } from 'rxjs';
+import { delay, switchMap } from 'rxjs/operators';
+import { AudioService } from '../../services/audio.service';
 
 // To use jsPDF, we need to declare it.
 declare var jspdf: any;
 
-type ViewState = 'FORM' | 'LOADING' | 'BILL_DETAILS' | 'PAYMENT' | 'PAYMENT_PROCESSING' | 'SUCCESS';
+type ViewState = 'FORM' | 'LOADING' | 'BILL_DETAILS' | 'PAYMENT' | 'SUCCESS';
 
 @Component({
   selector: 'app-utility-bill',
@@ -24,6 +27,7 @@ export class UtilityBillComponent implements OnInit {
   private fb: FormBuilder = inject(FormBuilder);
   private dataService = inject(DataService);
   captchaService = inject(CaptchaService);
+  private audioService = inject(AudioService);
 
   utilityType = signal<'Electricity' | 'Water'>('Electricity');
   viewState = signal<ViewState>('FORM');
@@ -31,6 +35,7 @@ export class UtilityBillComponent implements OnInit {
   billDetails = signal<Bill | null>(null);
   transactionId = signal<string | null>(null);
   showConfirmationDialog = signal<boolean>(false);
+  isProcessing = signal<boolean>(false);
   
   paymentMethod = signal<'UPI' | 'CARD'>('UPI');
   
@@ -120,15 +125,31 @@ export class UtilityBillComponent implements OnInit {
 
   executePayment() {
     this.showConfirmationDialog.set(false);
-    this.viewState.set('PAYMENT_PROCESSING');
+    this.isProcessing.set(true);
+    this.errorMessage.set(null);
     const bill = this.billDetails();
     if (bill) {
-        this.dataService.processPayment(bill.consumerId, bill.amount, this.utilityType(), bill.phone).subscribe(res => {
-            if (res.status === 'SUCCESS') {
-                this.transactionId.set(res.transactionId);
-                this.viewState.set('SUCCESS');
+        // Adding a delay to simulate real API call
+        const delayedPayment$ = of(null).pipe(delay(2000), switchMap(() => 
+          this.dataService.processPayment(bill.consumerId, bill.amount, this.utilityType(), bill.phone)
+        ));
+
+        delayedPayment$.subscribe({
+            next: res => {
+                if (res.status === 'SUCCESS') {
+                    this.transactionId.set(res.transactionId);
+                    this.viewState.set('SUCCESS');
+                    this.audioService.playSuccessSound();
+                }
+                this.isProcessing.set(false);
+            },
+            error: () => {
+                this.isProcessing.set(false);
+                this.errorMessage.set('An error occurred during payment. Please check your details and try again.');
             }
         });
+    } else {
+        this.isProcessing.set(false);
     }
   }
 
@@ -190,5 +211,6 @@ export class UtilityBillComponent implements OnInit {
     this.transactionId.set(null);
     this.viewState.set('FORM');
     this.captchaService.refresh();
+    this.isProcessing.set(false);
   }
 }
